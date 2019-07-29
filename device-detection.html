@@ -5,6 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>设备检测</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.bootcss.com/layer/3.0.1/skin/default/layer.css"
+    />
     <link rel="stylesheet" href="src/device-detection.css" />
   </head>
   <body>
@@ -12,7 +16,7 @@
       <div class="detection-title">设备检测</div>
       <div class="detection-main">
         <div class="detection-steps-bar" id="stepsBar">
-          <div class="detection-step-item detect-camera success active">
+          <div class="detection-step-item detect-camera active">
             <div class="detection-step-index">1</div>
             <div class="detection-step-name">
               <svg
@@ -40,7 +44,7 @@
             </div>
           </div>
           <div class="detection-step-connection"></div>
-          <div class="detection-step-item detect-speaker has-error">
+          <div class="detection-step-item detect-speaker">
             <div class="detection-step-index">2</div>
             <div class="detection-step-name">
               <svg
@@ -65,7 +69,7 @@
             </div>
           </div>
           <div class="detection-step-connection"></div>
-          <div class="detection-step-item detect-mic">
+          <div class="detection-step-item detect-microphone">
             <div class="detection-step-index">3</div>
             <div class="detection-step-name">
               <svg
@@ -100,7 +104,7 @@
           <div class="detection-viewer-item detect-camera-viewer">
             <div class="detection-viewer-main">
               <div class="detection-viewer-left">
-                <video class="video-player" id="video"></video>
+                <video class="video-player" id="cameraVideo"></video>
               </div>
               <div class="detection-viewer-right">
                 <div class="detection-tips-title">提示：</div>
@@ -127,7 +131,7 @@
             <div class="detection-viewer-main">
               <div class="detection-viewer-left">
                 <div class="detect-speaker-box">
-                  <div class="detect-speaker-button playing"></div>
+                  <div class="detect-speaker-button"></div>
                   <div class="speaker-volum-bar">
                     <svg
                       xmlns="http://www.w3.org/2000/svg"
@@ -145,7 +149,7 @@
                         style="stroke: #35a5ee; stroke-width: 1.0898"
                       />
                     </svg>
-                    <input type="range" min="0" max="100" step="5" value="50"/>
+                    <input type="range" min="0" max="100" step="5" value="50" />
                   </div>
                   <div style="font-size: 14px;">点击播放音频</div>
                 </div>
@@ -221,7 +225,97 @@
       </div>
     </div>
 
+    <div
+      class="device-detection-result"
+      id="detectResult"
+      style="display: none"
+    >
+      <div class="detect-result-title">检测结果</div>
+      <div class="detect-result-items">
+        <div class="detect-result-item detect-camera">
+          <div class="detection-step-name">
+            <svg
+              id="cameraIcon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              style="width: 16px;"
+            >
+              <path
+                class="fill-base"
+                d="M9.9,16.2c3.8,0,6.9-3.2,6.9-7.1S13.7,2,9.9,2S3,5.2,3,9.1S6.1,16.2,9.9,16.2z M9.9,3.2c3.1,0,5.7,2.6,5.7,5.9
+           c0,3.2-2.5,5.9-5.7,5.9c-3.1,0-5.7-2.6-5.7-5.9C4.3,5.9,6.8,3.2,9.9,3.2z"
+              />
+              <path
+                class="fill-base"
+                d="M15.8,14.9c-0.3-0.1-0.7,0-0.8,0.3c-0.1,0.3,0,0.6,0.2,0.8c0.4,0.2,0.5,0.4,0.5,0.4c0,0.4-2.1,1.3-5.8,1.3
+           c-3.7,0-5.8-1-5.8-1.3c0,0,0.1-0.2,0.5-0.4c0.3-0.2,0.4-0.5,0.2-0.8c-0.2-0.3-0.5-0.4-0.8-0.2c-0.9,0.5-1.1,1.1-1.1,1.5
+           c0,1.8,3.6,2.6,7,2.6c3.4,0,7-0.8,7-2.6C17,16,16.7,15.4,15.8,14.9L15.8,14.9z M9.9,12.5c1.8,0,3.3-1.5,3.3-3.3s-1.5-3.3-3.3-3.3
+           c-1.8,0-3.3,1.5-3.3,3.3C6.6,11,8.1,12.5,9.9,12.5L9.9,12.5z M8.8,6.4c0.8,0,1.4,0.6,1.4,1.4c0,0.8-0.6,1.4-1.4,1.4h0
+           C8,9.1,7.4,8.5,7.4,7.7C7.4,7,8,6.4,8.8,6.4z"
+              />
+            </svg>
+            <span>摄像头</span>
+          </div>
+          <i class="icon-detect-status"></i>
+        </div>
+        <div class="detect-result-item detect-speaker">
+          <div class="detection-step-name">
+            <svg
+              id="speakerIcon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              style="width: 17px;"
+            >
+              <polygon
+                class="stroke-base"
+                points="2.1,8.2 4.5,8.2 12.3,3.9 12.3,17.5 4.5,13.1 2.1,13.1 "
+                style="stroke-width: 1.5"
+              />
+              <path
+                class="stroke-base"
+                d="M15,7.3c1.4,0,2.5,1.5,2.5,3.4s-1.1,3.4-2.5,3.4"
+                style="stroke-width: 1.0898"
+              />
+            </svg>
+            <span>扬声器</span>
+          </div>
+          <i class="icon-detect-status"></i>
+        </div>
+        <div class="detect-result-item detect-microphone">
+          <div class="detection-step-name">
+            <svg
+              id="microphoneIcon"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              style="width: 17px;"
+            >
+              <path
+                class="stroke-base"
+                d="M16.1,8.5c0,1.6-0.7,3.1-1.9,4.2c-1.1,1-2.6,1.6-4.1,1.6h0c-3.3,0-6-2.6-6-5.7"
+              />
+              <path
+                class="stroke-base"
+                d="M10.1,1.8c1.7,0,3,1.2,3,2.7v4.1c0,1.5-1.4,2.7-3,2.7S7,10,7,8.5v0V4.5C7,3,8.4,1.8,10.1,1.8L10.1,1.8z"
+              />
+              <line class="stroke-base" x1="10" y1="14.5" x2="10" y2="17.5" />
+              <line
+                class="stroke-base"
+                x1="12.2"
+                y1="18.2"
+                x2="7.8"
+                y2="18.2"
+              />
+            </svg>
+            <span>麦克风</span>
+          </div>
+          <i class="icon-detect-status"></i>
+        </div>
+      </div>
+      <div class="detect-result-msg">设备没有问题，宝贝可以正常上课</div>
+    </div>
+
     <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
+    <script src="https://cdn.bootcss.com/layer/3.0.1/layer.min.js"></script>
     <script src="src/wavesurfer.min.js"></script>
     <script src="src/wavesurfer.microphone.min.js"></script>
     <script src="src/device-detection.js"></script>

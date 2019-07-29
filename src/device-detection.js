@@ -1,6 +1,39 @@
-var video = document.getElementById('video')
+var cameraVideo = document.getElementById('cameraVideo')
+var $stepsBar = $('#stepsBar')
+var $viewersBar = $('#viewersBar')
 var wavesurfer
+
+var audioPlayer = new Audio()
+audioPlayer.volume = 0.5
+audioPlayer.src = 'src/audio.mp3'
+audioPlayer.addEventListener('ended', function() {
+  $viewersBar.find('.detect-speaker-button').removeClass('playing')
+})
+
+layer.config({
+  title: false,
+  shade: [0.05, '#000'],
+  closeBtn: 0,
+  btnAlign: 'c',
+  shadeClose: true
+})
 $(function() {
+  var deviceStatus = {
+    camera: {
+      status: false,
+      isChecked: false
+    },
+    speaker: {
+      status: false,
+      isPlayed: false,
+      isChecked: false
+    },
+    microphone: {
+      status: false,
+      isChecked: false
+    }
+  }
+
   getUserMedia(
     {
       video: {
@@ -9,42 +42,188 @@ $(function() {
       }
     },
     function(stream) {
-      if ('srcObject' in video) {
-        video.srcObject = stream
+      if ('srcObject' in cameraVideo) {
+        cameraVideo.srcObject = stream
       } else {
         var URL = window.URL || window.webkitURL
-        video.src = URL.createObjectURL(stream)
+        cameraVideo.src = URL.createObjectURL(stream)
       }
-      video.onloadedmetadata = function(e) {
-        video.play()
+      cameraVideo.onloadedmetadata = function(e) {
+        cameraVideo.play()
       }
     }
   )
 
-  var $viewersBar = $('#viewersBar')
-  $('#stepsBar').on('click', '.detection-step-item', function() {
+  // 切换检测项目
+  $stepsBar.on('click', '.detection-step-item', function() {
     var index = $(this).index('.detection-step-item')
-    $viewersBar.css('transform', 'translateX(-' + index + '00%)')
+    changeStepByIndex(index)
+  })
 
-    if (!wavesurfer) {
-      initMicrophoneWave()
+  $viewersBar
+    .on('click', '.detect-speaker-button', function() {
+      var $this = $(this)
+      if ($this.hasClass('playing')) {
+        audioPlayer.pause()
+        $this.removeClass('playing')
+      } else {
+        audioPlayer.play()
+        $this.addClass('playing')
+        deviceStatus.speaker.isPlayed = true
+      }
+    })
+    .find('input[type="range"]')
+    .on('input', function() {
+      var value = $(this).val()
+      $(this).css('background-size', value + '% 100%')
+      audioPlayer.volume = value / 100
+    })
+    .end()
+    .on('click', '.detection-confirm-button', function() {
+      var $viewer = $(this).closest('.detection-viewer-item')
+      var status = $(this).hasClass('yes')
+      var nextIndex
+      if ($viewer.hasClass('detect-camera-viewer')) {
+        deviceStatus.camera.status = status
+        deviceStatus.camera.isChecked = true
+        nextIndex = 1
+      } else if ($viewer.hasClass('detect-speaker-viewer')) {
+        // 扬声器检测需要先播放音频
+        if (!deviceStatus.speaker.isPlayed) {
+          layer.open({
+            skin: 'layer-speaker-tips',
+            content: '请先点击播放音频按钮，进行试听',
+            yes: function(index) {
+              $viewersBar.find('.detect-speaker-button').trigger('click')
+              layer.close(index)
+            }
+          })
+          return false
+        }
+        deviceStatus.speaker.status = status
+        deviceStatus.speaker.isChecked = true
+        nextIndex = 2
+      } else if ($viewer.hasClass('detect-mic-viewer')) {
+        deviceStatus.microphone.status = status
+        deviceStatus.microphone.isChecked = true
+      }
+      updateStepsBar()
+
+      // 三项都完成检测后显示结果，未完成继续下一步
+      isAllChecked() ? showDetectResult() : changeStepByIndex(nextIndex)
+    })
+
+  // 显示检测结果
+  function showDetectResult() {
+    var $result = $('#detectResult')
+    var msg = '您不用着急，课前会有专业人员帮助调试'
+    if (
+      deviceStatus.camera.status &&
+      deviceStatus.speaker.status &&
+      deviceStatus.microphone.status
+    ) {
+      msg = '设备没有问题，宝贝可以正常上课'
     }
-    // wavesurfer.microphone.play()
-    // wavesurfer.microphone.pause()
-  })
+    $result.find('.detect-result-msg').text(msg)
 
-  $viewersBar.on('click', '.detect-speaker-button', function() {
-    $(this).toggleClass('playing')
-  })
-  function changeSpeed() {
-		var value = $('#range_speed').val();
-		var valStr = value + "% 100%";
-		$('#value1').html((value / 10).toFixed(1));
-		$('#range_speed').css({
-		  "background-size": valStr
-		})
-		$("input[name='animat_speed']").val((value / 10).toFixed(1));
-	};
+    $result.find('.detect-result-item').removeClass('has-error')
+    !deviceStatus.camera.status &&
+      $result.find('.detect-camera').addClass('has-error')
+    !deviceStatus.speaker.status &&
+      $result.find('.detect-speaker').addClass('has-error')
+    !deviceStatus.microphone.status &&
+      $result.find('.detect-microphone').addClass('has-error')
+
+    layer.open({
+      type: 1,
+      skin: 'layer-detect-result',
+      area: '500px',
+      content: $result,
+      btn: ['好的'],
+      yes: function(index) {
+        layer.close(index)
+      }
+    })
+  }
+
+  // 是否所有设备项已检测完成
+  function isAllChecked() {
+    return (
+      deviceStatus.camera.isChecked &&
+      deviceStatus.speaker.isChecked &&
+      deviceStatus.microphone.isChecked
+    )
+  }
+
+  // 更新页面检测状态的显示
+  function updateStepsBar() {
+    $stepsBar.find('.detection-step-item').removeClass('success has-error')
+    if (deviceStatus.camera.isChecked) {
+      var status = deviceStatus.camera.status ? 'success' : 'has-error'
+      $stepsBar.find('.detect-camera').addClass(status)
+    }
+    if (deviceStatus.speaker.isChecked) {
+      var status = deviceStatus.speaker.status ? 'success' : 'has-error'
+      $stepsBar.find('.detect-speaker').addClass(status)
+    }
+    if (deviceStatus.microphone.isChecked) {
+      var status = deviceStatus.microphone.status ? 'success' : 'has-error'
+      $stepsBar.find('.detect-microphone').addClass(status)
+    }
+  }
+
+  // 改变测试模块
+  function changeStepByIndex(index) {
+    if (index === undefined) {
+      if (!deviceStatus.camera.isChecked) {
+        changeStepByIndex(0)
+      } else if (!deviceStatus.speaker.isChecked) {
+        changeStepByIndex(1)
+      }
+      return
+    }
+
+    if (
+      $stepsBar
+        .find('.detection-step-item.active')
+        .index('.detection-step-item') === index
+    ) {
+      return
+    }
+
+    $viewersBar.css('transform', 'translateX(-' + index + '00%)')
+    $stepsBar
+      .find('.detection-step-item')
+      .removeClass('active')
+      .eq(index)
+      .addClass('active')
+
+    $stepsBar
+      .find('.detection-step-connection')
+      .removeClass('active')
+      .end()
+      .find('.detection-step-item')
+      .eq(index)
+      .prevAll('.detection-step-connection')
+      .addClass('active')
+
+    if (index === 0) {
+      cameraVideo.play()
+    } else {
+      cameraVideo.pause()
+    }
+
+    if (index !== 1) {
+      audioPlayer.pause()
+      $viewersBar.find('.detect-speaker-button').removeClass('playing')
+    }
+
+    if (index === 2) {
+      wavesurfer ? wavesurfer.microphone.play() : initMicrophoneWave()
+    } else {
+      wavesurfer && wavesurfer.microphone.pause()
+    }
+  }
 })
 
 // 访问用户媒体设备
