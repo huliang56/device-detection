@@ -19,6 +19,7 @@
 .detection-steps-bar {
   display: flex;
   align-items: center;
+  margin-top: 20px;
   user-select: none;
 }
 .detection-step-item {
