@@ -7,7 +7,7 @@ const htmlmin = require('gulp-htmlmin')
 const autoprefixer = require('gulp-autoprefixer')
 const merge = require('merge-stream')
 const cache = require('gulp-cache')
-const cssnano = require('gulp-cssnano')
+const cleanCSS = require('gulp-clean-css')
 
 // 清空之前打包的内容
 gulp.task('clean', async () => {
@@ -35,7 +35,7 @@ gulp.task('CSS', () => {
   return gulp
     .src('src/device-detection.css')
     .pipe(autoprefixer())
-    .pipe(cssnano())
+    .pipe(cleanCSS())
     .pipe(gulp.dest('dist/src'))
 })
 
